@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pencarian Penginapan</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 50px; }
+    #search { width: 300px; padding: 10px; }
+    button { padding: 10px; }
+    ul { list-style: none; padding: 0; }
+    li { padding: 10px; border-bottom: 1px solid #ddd; }
+  </style>
+</head>
+<body>
+  <h1>Pencarian Penginapan Berdasarkan Lokasi</h1>
+  <input type="text" id="location" placeholder="Masukkan kota atau alamat" />
+  <button onclick="searchHotels()">Cari Penginapan</button>
+
+  <h2>Hasil Pencarian:</h2>
+  <ul id="results"></ul>
+
+  <script>
+    async function searchHotels() {
+      const location = document.getElementById('location').value;
+      if (!location) {
+        alert('Masukkan lokasi!');
+        return;
+      }
+      
+      // Panggil Geocode API untuk mendapatkan koordinat berdasarkan alamat
+      const geocodeResponse = await fetch(`https://nominatim.openstreetmap.org/search?q=${location}&format=json&limit=1`);
+      const geocodeData = await geocodeResponse.json();
+      if (!geocodeData.length) {
+        alert('Lokasi tidak ditemukan!');
+        return;
+      }
+      
+      const lat = geocodeData[0].lat;
+      const lng = geocodeData[0].lon;
+      
+      // Panggil backend API untuk mencari penginapan berdasarkan koordinat
+      const response = await fetch(`http://localhost:3000/search?lat=${lat}&lng=${lng}`);
+      const data = await response.json();
+      
+      const results = document.getElementById('results');
+      results.innerHTML = '';
+      if (data.hotels.length) {
+        data.hotels.forEach(hotel => {
+          const li = document.createElement('li');
+          li.textContent = `${hotel.name} - ${hotel.address} - Harga: Rp${hotel.price} - Rating: ${hotel.rating}`;
+          results.appendChild(li);
+        });
+      } else {
+        results.innerHTML = '<li>Tidak ada penginapan ditemukan.</li>';
+      }
+    }
+  </script>
+</body>
+</html>
